@@ -20,20 +20,23 @@ function err(error: unknown, fallback: string): ActionResult {
 }
 
 /* ------------------------------------------------------------------ */
-/* Post-signup profile creation (called from the client after signUp)   */
+/* Post-signup profile creation (session-independent — never creates    */
+/* orphan auth users)                                                   */
 /* ------------------------------------------------------------------ */
-export async function createProfileAfterSignup(): Promise<ActionResult> {
-  const session = await auth.api.getSession({ headers: headers() });
-  if (!session?.user) {
-    return { ok: false, error: "You must be signed in. Try signing in first." };
+export async function createProfileAfterSignup(input: {
+  userId: string;
+  email: string;
+  name: string;
+}): Promise<ActionResult> {
+  if (!input.userId || !input.email) {
+    return { ok: false, error: "Missing account details." };
   }
-  const user = session.user;
   await db`
     insert into profiles (id, email, full_name, role, status, is_onboarded)
-    values (${user.id}, ${user.email}, ${user.name ?? null}, null, 'active', false)
+    values (${input.userId}, ${input.email}, ${input.name || null}, null, 'active', false)
     on conflict (id) do nothing
   `;
-  return { ok: true, requiresConfirmation: !user.emailVerified };
+  return { ok: true };
 }
 
 /* ------------------------------------------------------------------ */

@@ -73,7 +73,7 @@ export function SignupForm() {
   } = useForm<z.infer<typeof signupSchema>>({ resolver: zodResolver(signupSchema) });
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
-    const { error } = await authClient.signUp.email({
+    const { data, error } = await authClient.signUp.email({
       email: values.email,
       password: values.password,
       name: values.fullName,
@@ -83,15 +83,31 @@ export function SignupForm() {
       toast(error.message ?? "Signup failed.", "error");
       return;
     }
-    // Create the app profile row from the now-established session.
-    const result = await createProfileAfterSignup();
+    if (!data?.user) {
+      toast("Could not create the account. Please try again.", "error");
+      return;
+    }
+    // Create the app profile row (session-independent, so no orphan accounts).
+    const result = await createProfileAfterSignup({
+      userId: data.user.id,
+      email: values.email,
+      name: values.fullName,
+    });
     if (!result.ok) {
       toast(result.error ?? "Could not finish account setup.", "error");
       return;
     }
-    toast("Account created. Choose your role to continue.", "success");
-    router.push("/signup/role");
-    router.refresh();
+    // If a session was established, continue to role selection; otherwise ask
+    // the user to verify their email first.
+    const session = await authClient.getSession();
+    if (session.data) {
+      toast("Account created. Choose your role to continue.", "success");
+      router.push("/signup/role");
+      router.refresh();
+    } else {
+      toast("Account created! Check your email to verify it, then sign in.", "success");
+      router.push("/login");
+    }
   };
 
   return (
