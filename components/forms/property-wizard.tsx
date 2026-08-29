@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui/core";
-import { useToast } from "@/components/ui/feedback";
+import { useToast, Alert } from "@/components/ui/feedback";
 import { cn, formatMoney } from "@/lib/utils";
 import { uploadImageFile } from "@/lib/storage";
 import {
@@ -126,11 +126,14 @@ export function PropertyWizard({
   const [uploading, setUploading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [stepError, setStepError] = React.useState<string | null>(null);
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
 
-  const set = <K extends keyof WizardData>(key: K, value: WizardData[K]) =>
+  const set = <K extends keyof WizardData>(key: K, value: WizardData[K]) => {
+    if (stepError) setStepError(null);
     setData((prev) => ({ ...prev, [key]: value }));
+  };
 
   const validateStep = (name: StepName): boolean => {
     try {
@@ -177,7 +180,9 @@ export function PropertyWizard({
       return true;
     } catch (err) {
       const issue = (err as z.ZodError).issues?.[0];
-      toast(issue ? issue.message : "Please fix the highlighted fields.", "error");
+      const message = issue ? issue.message : "Please fix the highlighted fields.";
+      toast(message, "error");
+      setStepError(message);
       return false;
     }
   };
@@ -218,6 +223,7 @@ export function PropertyWizard({
   const next = async () => {
     const ok = await persist(step);
     if (!ok) return;
+    setStepError(null);
     const idx = STEPS.findIndex((s) => s.id === step);
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1].id);
     else setStep("review");
@@ -314,6 +320,13 @@ export function PropertyWizard({
       </ol>
 
       <div className="rounded-xl border bg-card p-5">
+        {stepError ? (
+          <div className="mb-4">
+            <Alert variant="error" title="Please fix the following">
+              {stepError}
+            </Alert>
+          </div>
+        ) : null}
         {step === "basic" ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Title" required className="sm:col-span-2">
