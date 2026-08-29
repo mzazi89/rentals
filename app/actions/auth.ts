@@ -3,13 +3,8 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { rateLimit } from "@/lib/rate-limit";
-import { getAppUrl } from "@/lib/env-public";
 import { audit } from "@/lib/audit";
 import {
-  signupSchema,
-  loginSchema,
-  forgotPasswordSchema,
   roleSelectSchema,
   tenantOnboardingSchema,
   agentOnboardingSchema,
@@ -25,101 +20,20 @@ function err(error: unknown, fallback: string): ActionResult {
 }
 
 /* ------------------------------------------------------------------ */
-/* Signup (creates the auth user + profile row)                       */
+/* Post-signup profile creation (called from the client after signUp)   */
 /* ------------------------------------------------------------------ */
-export async function signupAction(values: z.infer<typeof signupSchema>): Promise<ActionResult> {
-  const parsed = signupSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-
-  try {
-    const { user, token } = await auth.api.signUpEmail({
-      body: {
-        email: parsed.data.email,
-        password: parsed.data.password,
-        name: parsed.data.fullName,
-        callbackURL: "/signup/role",
-      },
-    });
-    if (!user) return { ok: false, error: "Could not create account." };
-
-    // Create the app profile row (role assigned in the next step).
-    await db`
-      insert into profiles (id, email, full_name, role, status, is_onboarded)
-      values (${user.id}, ${parsed.data.email}, ${parsed.data.fullName}, null, 'active', false)
-      on conflict (id) do nothing
-    `;
-
-    const requiresConfirmation = !user.emailVerified;
-    return {
-      ok: true,
-      requiresConfirmation,
-      // token is set when email confirmation is required
-      message: requiresConfirmation
-        ? "Check your email to confirm your account, then continue."
-        : "Account created. Choose your role to continue.",
-    };
-  } catch (error) {
-    return err(error, "Could not create account. The email may already be registered.");
+export async function createProfileAfterSignup(): Promise<ActionResult> {
+  const session = await auth.api.getSession({ headers: headers() });
+  if (!session?.user) {
+    return { ok: false, error: "You must be signed in. Try signing in first." };
   }
-}
-
-/* ------------------------------------------------------------------ */
-/* Login                                                              */
-/* ------------------------------------------------------------------ */
-export async function loginAction(values: z.infer<typeof loginSchema>): Promise<ActionResult> {
-  const parsed = loginSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-
-  if (!rateLimit(`login:${parsed.data.email.toLowerCase()}`, 5, 60_000)) {
-    return { ok: false, error: "Too many attempts. Please wait a minute and try again." };
-  }
-
-  try {
-    const session = await auth.api.signInEmail({ body: { email: parsed.data.email, password: parsed.data.password } });
-    if (!session?.user) return { ok: false, error: "Invalid email or password." };
-
-    // Reject suspended accounts at login.
-    const rows = await db<{ status: string }[]>`select status from profiles where id = ${session.user.id}`;
-    if (rows[0]?.status === "suspended") {
-      await auth.api.signOut({ headers: headers() });
-      return { ok: false, error: "This account has been suspended. Contact support." };
-    }
-    return { ok: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (/verif/i.test(message)) {
-      return { ok: false, error: "Please verify your email address first. Check your inbox." };
-    }
-    if (/password/i.test(message)) {
-      return { ok: false, error: "Invalid email or password." };
-    }
-    return { ok: false, error: "Invalid email or password." };
-  }
-}
-
-export async function logoutAction(): Promise<void> {
-  try {
-    await auth.api.signOut({ headers: headers() });
-  } catch {
-    /* already signed out */
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Password reset                                                     */
-/* ------------------------------------------------------------------ */
-export async function forgotPasswordAction(values: z.infer<typeof forgotPasswordSchema>): Promise<ActionResult> {
-  const parsed = forgotPasswordSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-
-  try {
-    await auth.api.requestPasswordReset({
-      body: { email: parsed.data.email, redirectTo: "/reset-password" },
-    });
-  } catch {
-    // Never reveal whether an email exists.
-  }
-  return { ok: true };
+  const user = session.user;
+  await db`
+    insert into profiles (id, email, full_name, role, status, is_onboarded)
+    values (${user.id}, ${user.email}, ${user.name ?? null}, null, 'active', false)
+    on conflict (id) do nothing
+  `;
+  return { ok: true, requiresConfirmation: !user.emailVerified };
 }
 
 /* ------------------------------------------------------------------ */

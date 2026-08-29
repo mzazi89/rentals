@@ -14,17 +14,12 @@ import {
   resetPasswordSchema,
   roleSelectSchema,
 } from "@/lib/validations";
-import {
-  signupAction,
-  loginAction,
-  forgotPasswordAction,
-  chooseRoleAction,
-} from "@/app/actions/auth";
+import { chooseRoleAction, createProfileAfterSignup } from "@/app/actions/auth";
 import { authClient } from "@/lib/auth-client";
 import type { z } from "zod";
 
 /* ------------------------------------------------------------------ */
-/* Login                                                              */
+/* Login (client SDK — sets the session cookie properly)              */
 /* ------------------------------------------------------------------ */
 export function LoginForm() {
   const router = useRouter();
@@ -37,15 +32,19 @@ export function LoginForm() {
   } = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    const result = await loginAction(values);
-    if (result.ok) {
-      toast("Signed in successfully", "success");
-      const next = searchParams.get("next");
-      router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
-      router.refresh();
-    } else {
-      toast(result.error ?? "Login failed.", "error");
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+    });
+    if (error) {
+      const message = error.message ?? "Login failed.";
+      toast(/verify/i.test(message) ? "Please verify your email address first." : message, "error");
+      return;
     }
+    toast("Signed in successfully", "success");
+    const next = searchParams.get("next");
+    router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
+    router.refresh();
   };
 
   return (
@@ -62,7 +61,7 @@ export function LoginForm() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Signup                                                             */
+/* Signup (client SDK — establishes the session for role selection)   */
 /* ------------------------------------------------------------------ */
 export function SignupForm() {
   const router = useRouter();
@@ -74,14 +73,25 @@ export function SignupForm() {
   } = useForm<z.infer<typeof signupSchema>>({ resolver: zodResolver(signupSchema) });
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
-    const result = await signupAction(values);
-    if (result.ok) {
-      toast(String(result.message ?? "Account created"), "success");
-      router.push("/signup/role");
-      router.refresh();
-    } else {
-      toast(result.error ?? "Signup failed.", "error");
+    const { error } = await authClient.signUp.email({
+      email: values.email,
+      password: values.password,
+      name: values.fullName,
+      callbackURL: "/signup/role",
+    });
+    if (error) {
+      toast(error.message ?? "Signup failed.", "error");
+      return;
     }
+    // Create the app profile row from the now-established session.
+    const result = await createProfileAfterSignup();
+    if (!result.ok) {
+      toast(result.error ?? "Could not finish account setup.", "error");
+      return;
+    }
+    toast("Account created. Choose your role to continue.", "success");
+    router.push("/signup/role");
+    router.refresh();
   };
 
   return (
@@ -124,12 +134,17 @@ export function RoleSelectForm() {
       setLoading(false);
       return;
     }
-    const result = await chooseRoleAction(parsed.data);
-    if (result.ok) {
-      router.push(`/signup/onboarding/${result.role}`);
-      router.refresh();
-    } else {
-      toast(result.error ?? "Could not set role.", "error");
+    try {
+      const result = await chooseRoleAction(parsed.data);
+      if (result.ok) {
+        router.push(`/signup/onboarding/${result.role}`);
+        router.refresh();
+      } else {
+        toast(result.error ?? "Could not set role.", "error");
+      }
+    } catch {
+      toast("Something went wrong. Please try again.", "error");
+    } finally {
       setLoading(false);
     }
   };
@@ -173,13 +188,16 @@ export function ForgotPasswordForm() {
   } = useForm<z.infer<typeof forgotPasswordSchema>>({ resolver: zodResolver(forgotPasswordSchema) });
 
   const onSubmit = async (values: z.infer<typeof forgotPasswordSchema>) => {
-    const result = await forgotPasswordAction(values);
-    if (result.ok) {
-      setDone(true);
-      toast("Password reset link sent", "success");
-    } else {
-      toast(result.error ?? "Something went wrong.", "error");
+    const { error } = await authClient.requestPasswordReset({
+      email: values.email,
+      redirectTo: "/reset-password",
+    });
+    if (error) {
+      toast(error.message ?? "Something went wrong.", "error");
+      return;
     }
+    setDone(true);
+    toast("Password reset link sent", "success");
   };
 
   if (done) {

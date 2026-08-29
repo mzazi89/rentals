@@ -12,10 +12,10 @@ export function updateSession(request: NextRequest) {
 
   const isProtected = path.startsWith("/dashboard") || path.startsWith("/admin");
   const isAuthPage =
-    path.startsWith("/login") ||
-    path.startsWith("/signup") ||
-    path.startsWith("/forgot-password") ||
-    path.startsWith("/reset-password");
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password" ||
+    path === "/reset-password";
 
   if (!sessionCookie && isProtected) {
     const url = request.nextUrl.clone();
