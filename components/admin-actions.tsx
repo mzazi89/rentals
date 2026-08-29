@@ -8,6 +8,7 @@ import { Dialog, ConfirmDialog, DropdownMenu, DropdownItem } from "@/components/
 import { useToast } from "@/components/ui/feedback";
 import {
   verifyAgent,
+  verifyLandlord,
   decideProperty,
   suspendUser,
   reactivateUser,
@@ -152,6 +153,74 @@ export function AgentVerifyActions({ agentId, status }: { agentId: string; statu
             }}
           >
             {noteAction === "reject" ? "Reject agent" : "Request information"}
+          </Button>
+        </div>
+      </Dialog>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Landlord verification (owner)                                      */
+/* ------------------------------------------------------------------ */
+export function LandlordVerifyActions({ landlordId, status }: { landlordId: string; status: string }) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const [noteOpen, setNoteOpen] = React.useState(false);
+  const [note, setNote] = React.useState("");
+  const [noteAction, setNoteAction] = React.useState<"reject" | "request_info">("reject");
+
+  const act = async (action: "approve" | "reject" | "request_info") => {
+    setBusy(action);
+    const result = await verifyLandlord({
+      landlordId,
+      action,
+      note: action === "approve" ? undefined : note || undefined,
+    });
+    if (result.ok) {
+      toast("Landlord verification updated", "success");
+      router.refresh();
+    } else {
+      toast(result.error ?? "Could not update.", "error");
+    }
+    setBusy(null);
+  };
+
+  const openNote = (action: "reject" | "request_info") => {
+    setNoteAction(action);
+    setNote("");
+    setNoteOpen(true);
+  };
+
+  return (
+    <>
+      {status === "pending" || status === "info_requested" ? (
+        <div className="flex flex-wrap gap-1.5">
+          <Button size="sm" variant="success" loading={busy === "approve"} onClick={() => act("approve")}>
+            <Check className="size-3.5" /> Approve
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => openNote("request_info")}>Request info</Button>
+          <Button size="sm" variant="destructive" onClick={() => openNote("reject")}>Reject</Button>
+        </div>
+      ) : (
+        <Button size="sm" variant="outline" onClick={() => openNote("request_info")}>Request info</Button>
+      )}
+
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen} title={noteAction === "reject" ? "Reject landlord" : "Request more information"} description="Add a note for the landlord.">
+        <div className="space-y-4">
+          <Field label="Note">
+            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Please upload proof of ownership" />
+          </Field>
+          <Button
+            variant={noteAction === "reject" ? "destructive" : "default"}
+            className="w-full"
+            onClick={() => {
+              setNoteOpen(false);
+              void act(noteAction);
+            }}
+          >
+            {noteAction === "reject" ? "Reject landlord" : "Request information"}
           </Button>
         </div>
       </Dialog>

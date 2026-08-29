@@ -182,7 +182,7 @@ export async function getAdminAnalytics(range: number): Promise<{
   payments: { date: string; payments: number; revenue: number }[];
 }> {
   const profile = await requireProfile();
-  assertRole(profile, ["admin"]);
+  assertRole(profile, ["owner", "admin"]);
 
   const since = new Date(Date.now() - range * 86400000).toISOString();
 

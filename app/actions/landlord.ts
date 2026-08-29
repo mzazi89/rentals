@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { requireProfile } from "@/lib/auth/helpers";
+import { requireProfile, isOwnerRole } from "@/lib/auth/helpers";
 import { assertRole } from "@/lib/permissions";
 import { createNotification } from "@/lib/notifications";
 import { audit } from "@/lib/audit";
@@ -20,7 +20,7 @@ export async function assignAgentToProperty(
   values: z.infer<typeof assignAgentSchema>
 ): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["landlord", "admin"]);
+  assertRole(profile, ["landlord", "owner", "admin"]);
   const parsed = assignAgentSchema.safeParse(values);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
@@ -30,7 +30,7 @@ export async function assignAgentToProperty(
   `;
   const prop = property[0];
   if (!prop) return { ok: false, error: "Property not found." };
-  if (prop.owner_id !== profile.id && profile.role !== "admin") {
+  if (prop.owner_id !== profile.id && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not own this property." };
   }
 

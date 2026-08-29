@@ -33,6 +33,8 @@ export const getSettings = cache(async (): Promise<AppSettings> => {
       String(raw["features.require_property_verification"] ?? "true") === "true",
     requireAgentVerification:
       String(raw["features.require_agent_verification"] ?? "true") === "true",
+    requireLandlordVerification:
+      String(raw["features.require_landlord_verification"] ?? "true") === "true",
     allowPublicRegistration:
       String(raw["features.allow_public_registration"] ?? "true") === "true",
     allowLandlordRegistration:

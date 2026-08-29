@@ -71,7 +71,12 @@ export default async function AgentPropertiesPage() {
                     <Td className="font-semibold">{formatMoney(p.monthly_rent)}</Td>
                     <Td><StatusBadge status={p.status} /></Td>
                     <Td className="text-right">
-                      <PropertyActions propertyId={p.id} status={p.status} slug={p.slug} />
+                      <PropertyActions
+                        propertyId={p.id}
+                        status={p.status}
+                        slug={p.slug}
+                        manageHref={`/dashboard/agent/properties/${p.id}/units`}
+                      />
                     </Td>
                   </TRow>
                 ))}

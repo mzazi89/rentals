@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS = {
   depositCommissionRate: 2.5,
   requirePropertyVerification: true,
   requireAgentVerification: true,
+  requireLandlordVerification: true,
   allowPublicRegistration: true,
   allowLandlordRegistration: true,
   defaultDescription:
@@ -48,6 +49,7 @@ export type AppSettings = {
   depositCommissionRate: number;
   requirePropertyVerification: boolean;
   requireAgentVerification: boolean;
+  requireLandlordVerification: boolean;
   allowPublicRegistration: boolean;
   allowLandlordRegistration: boolean;
   defaultDescription: string;
@@ -124,6 +126,8 @@ export const AGENT_VERIFICATION_LABELS: Record<string, string> = {
   rejected: "Rejected",
   info_requested: "More Info Needed",
 };
+
+export const LANDLORD_VERIFICATION_LABELS = AGENT_VERIFICATION_LABELS;
 
 export const REVIEW_STATUS_LABELS: Record<string, string> = {
   pending: "Pending",

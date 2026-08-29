@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth/helpers";
+import { isOwnerRole } from "@/lib/auth/helpers";
 import { db } from "@/db";
 import { PropertyWizard } from "@/components/forms/property-wizard";
 import { PageHeader } from "@/components/dashboard";
@@ -19,7 +20,7 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
   const property = rows[0] ?? null;
 
   if (!property) notFound();
-  if (property.owner_id !== profile.id && property.agent_id !== profile.id && profile.role !== "admin") {
+  if (property.owner_id !== profile.id && property.agent_id !== profile.id && !isOwnerRole(profile.role)) {
     redirect("/dashboard/agent/properties");
   }
 

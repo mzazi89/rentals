@@ -15,7 +15,7 @@ export const metadata = {
 const TITLES: Record<string, { title: string; sub: string }> = {
   tenant: { title: "Tell us about you", sub: "We'll use this to recommend the best properties." },
   agent: { title: "Agent profile", sub: "Your profile goes to our team for verification." },
-  landlord: { title: "Landlord profile", sub: "Get your property listed with trusted agents." },
+  landlord: { title: "Landlord profile", sub: "Your account must be verified by the owner before your buildings appear in explore." },
 };
 
 export default async function OnboardingPage({ params }: { params: { role: string } }) {

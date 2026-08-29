@@ -16,7 +16,7 @@ type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: str
  */
 export async function createReview(values: z.infer<typeof reviewCreateSchema>): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["tenant", "admin"]);
+  assertRole(profile, ["tenant", "owner", "admin"]);
   const parsed = reviewCreateSchema.safeParse(values);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 

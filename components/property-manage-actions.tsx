@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Eye, Pencil, Power, Trash2 } from "lucide-react";
+import { Building2, MoreHorizontal, Eye, Pencil, Power, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownItem } from "@/components/ui/overlays";
 import { ConfirmDialog } from "@/components/ui/overlays";
 import { useToast } from "@/components/ui/feedback";
@@ -13,10 +13,12 @@ export function PropertyActions({
   propertyId,
   status,
   slug,
+  manageHref,
 }: {
   propertyId: string;
   status: string;
   slug: string;
+  manageHref?: string;
 }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -62,6 +64,13 @@ export function PropertyActions({
                 <Pencil className="size-4" /> Edit
               </DropdownItem>
             </Link>
+            {manageHref ? (
+              <Link href={manageHref} className="block">
+                <DropdownItem>
+                  <Building2 className="size-4" /> Units & structure
+                </DropdownItem>
+              </Link>
+            ) : null}
             <DropdownItem onClick={doDeactivate}>
               <Power className="size-4" /> {status === "inactive" ? "Activate" : "Deactivate"}
             </DropdownItem>

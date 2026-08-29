@@ -5,13 +5,18 @@ import { db } from "@/db";
 import { syncOverdueRent } from "@/lib/rent";
 import { PageHeader } from "@/components/dashboard";
 import { StatCard, Card, CardContent, CardHeader, CardTitle, Progress } from "@/components/ui/layout";
-import { StatusBadge, EmptyState } from "@/components/ui/feedback";
+import { StatusBadge, EmptyState, Alert } from "@/components/ui/feedback";
 import { formatMoney, timeAgo } from "@/lib/utils";
 import type { Application, Payment } from "@/types";
 
 export default async function LandlordDashboardPage() {
   const profile = await requireProfile();
     void syncOverdueRent();
+
+  const landlordRow = await db<{ verification_status: string; verification_notes: string | null }[]>`
+    select verification_status, verification_notes from landlords where id = ${profile.id}
+  `;
+  const landlordStatus = landlordRow[0]?.verification_status ?? "pending";
 
   const [properties, leaseRows] = await Promise.all([
     db<{ id: string; title: string; status: string; monthly_rent: number; slug: string }[]>`
@@ -74,6 +79,27 @@ export default async function LandlordDashboardPage() {
           </Link>
         }
       />
+
+      {landlordStatus === "pending" ? (
+        <div className="mb-6">
+          <Alert variant="warning" title="Account pending owner verification">
+            Your buildings will appear in explore only after the owner verifies your account.
+            You can still prepare your buildings and floors in the meantime.
+          </Alert>
+        </div>
+      ) : landlordStatus === "rejected" ? (
+        <div className="mb-6">
+          <Alert variant="error" title="Verification was not approved">
+            {landlordRow[0]?.verification_notes ?? "Contact support for details."}
+          </Alert>
+        </div>
+      ) : landlordStatus === "info_requested" ? (
+        <div className="mb-6">
+          <Alert variant="info" title="More information requested">
+            {landlordRow[0]?.verification_notes ?? "Please update your details so the owner can verify you."}
+          </Alert>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <StatCard label="Total properties" value={props.length} icon={<Home className="size-5" />} />

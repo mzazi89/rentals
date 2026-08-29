@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { requireProfile } from "@/lib/auth/helpers";
+import { isOwnerRole } from "@/lib/auth/helpers";
 import { assertRole } from "@/lib/permissions";
 import { createNotification } from "@/lib/notifications";
 import { applicationCreateSchema, applicationReviewSchema } from "@/lib/validations";
@@ -15,7 +16,7 @@ type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: str
 /* ------------------------------------------------------------------ */
 export async function applyToProperty(values: z.infer<typeof applicationCreateSchema>): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["tenant", "admin"]);
+  assertRole(profile, ["tenant", "owner", "admin"]);
   const parsed = applicationCreateSchema.safeParse(values);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
@@ -76,7 +77,7 @@ export async function applyToProperty(values: z.infer<typeof applicationCreateSc
 /* ------------------------------------------------------------------ */
 export async function reviewApplication(values: z.infer<typeof applicationReviewSchema>): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
   const parsed = applicationReviewSchema.safeParse(values);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
@@ -92,7 +93,7 @@ export async function reviewApplication(values: z.infer<typeof applicationReview
 
   const isAgent = app.agent_id === profile.id;
   const isLandlord = app.owner_id === profile.id;
-  if (!isAgent && !isLandlord && profile.role !== "admin") {
+  if (!isAgent && !isLandlord && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to review this application." };
   }
 
@@ -127,7 +128,7 @@ export async function reviewApplication(values: z.infer<typeof applicationReview
 /* ------------------------------------------------------------------ */
 export async function withdrawApplication(applicationId: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["tenant", "admin"]);
+  assertRole(profile, ["tenant", "owner", "admin"]);
 
   const application = await db<{ id: string; status: string }[]>`
     select id, status from applications where id = ${applicationId} and applicant_id = ${profile.id}

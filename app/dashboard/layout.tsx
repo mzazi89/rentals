@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireProfile, dashboardPathForRole } from "@/lib/auth/helpers";
+import { requireProfile, dashboardPathForRole, isOwnerRole } from "@/lib/auth/helpers";
 import { DashboardSidebar, DashboardTopbar } from "@/components/dashboard";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await requireProfile();
 
   if (!profile.role) redirect("/signup/role");
-  if (!profile.is_onboarded && profile.role !== "admin") {
+  if (!profile.is_onboarded && !isOwnerRole(profile.role)) {
     redirect(`/signup/onboarding/${profile.role}`);
   }
   if (profile.status === "suspended") redirect("/account-suspended");

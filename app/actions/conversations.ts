@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { requireProfile } from "@/lib/auth/helpers";
+import { isOwnerRole } from "@/lib/auth/helpers";
 import { createNotification } from "@/lib/notifications";
 import { messageSendSchema, conversationCreateSchema } from "@/lib/validations";
 import type { z } from "zod";
@@ -25,7 +26,7 @@ export async function startConversation(
   `;
   const prop = property[0];
   if (!prop) return { ok: false, error: "Property not found." };
-  if (prop.agent_id !== parsed.data.agentId && profile.role !== "admin") {
+  if (prop.agent_id !== parsed.data.agentId && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You can only message the agent managing this property." };
   }
   if (prop.agent_id === profile.id) {

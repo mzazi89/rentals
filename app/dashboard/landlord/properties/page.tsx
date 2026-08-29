@@ -82,7 +82,12 @@ export default async function LandlordPropertiesPage() {
                     </Td>
                     <Td><StatusBadge status={p.status} /></Td>
                     <Td className="text-right">
-                      <PropertyActions propertyId={p.id} status={p.status} slug={p.slug} />
+                      <PropertyActions
+                        propertyId={p.id}
+                        status={p.status}
+                        slug={p.slug}
+                        manageHref={`/dashboard/landlord/properties/${p.id}/structure`}
+                      />
                     </Td>
                   </TRow>
                 ))}

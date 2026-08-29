@@ -13,12 +13,22 @@ export function assertRole(
   }
 }
 
-/** Can this profile manage a specific property (owner / assigned agent / admin)? */
+/** Is this profile the platform owner (owner or legacy admin)? */
+export function isOwner(profile: Profile): boolean {
+  return profile.role === "owner" || profile.role === "admin";
+}
+
+/** Assert the profile is the platform owner. */
+export function assertOwner(profile: Profile): asserts profile is Profile & { role: "owner" | "admin" } {
+  if (!isOwner(profile)) throw new Error("FORBIDDEN");
+}
+
+/** Can this profile manage a specific property (owner / assigned agent / platform owner)? */
 export async function canManageProperty(
   profile: Profile,
   propertyId: string
 ): Promise<boolean> {
-  if (profile.role === "admin") return true;
+  if (isOwner(profile)) return true;
   const rows = await db<{ id: string }[]>`
     select id from properties
     where id = ${propertyId} and (owner_id = ${profile.id} or agent_id = ${profile.id})

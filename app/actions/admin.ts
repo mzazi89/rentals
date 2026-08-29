@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { requireProfile } from "@/lib/auth/helpers";
+import { requireProfile, isOwnerRole } from "@/lib/auth/helpers";
 import { audit } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
 import {
@@ -18,7 +18,7 @@ type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: str
 /** Hard server-side admin guard. Redirects non-admins. */
 async function requireAdmin() {
   const profile = await requireProfile();
-  if (profile.role !== "admin") redirect("/forbidden");
+  if (!isOwnerRole(profile.role)) redirect("/forbidden");
   return profile;
 }
 
@@ -54,6 +54,43 @@ export async function verifyAgent(values: z.infer<typeof adminVerifyAgentSchema>
     note: parsed.data.note ?? null,
   });
   revalidatePath("/admin/agents");
+  return { ok: true };
+}
+
+/* ------------------------------------------------------------------ */
+/* Landlord verification (owner must verify before buildings go public) */
+/* ------------------------------------------------------------------ */
+export async function verifyLandlord(values: {
+  landlordId: string;
+  action: "approve" | "reject" | "request_info";
+  note?: string;
+}): Promise<ActionResult> {
+  await requireAdmin();
+  const statusMap = { approve: "verified", reject: "rejected", request_info: "info_requested" } as const;
+  const status = statusMap[values.action];
+
+  await db`
+    update landlords set verification_status = ${status}, verification_notes = ${values.note ?? null}
+    where id = ${values.landlordId}
+  `;
+
+  await createNotification({
+    userId: values.landlordId,
+    type: "agent_verification",
+    title: status === "verified" ? "Your account is verified!" : "Verification update",
+    body:
+      status === "verified"
+        ? "You're verified. Your buildings can now appear in explore."
+        : values.note ?? "Your verification status changed.",
+    link: "/dashboard/landlord",
+  });
+
+  await audit("landlord_verification", "landlords", values.landlordId, {
+    status,
+    note: values.note ?? null,
+  });
+  revalidatePath("/admin/landlords");
+  revalidatePath("/properties");
   return { ok: true };
 }
 

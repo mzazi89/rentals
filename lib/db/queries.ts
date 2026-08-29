@@ -2,10 +2,13 @@ import "server-only";
 
 import postgres from "postgres";
 import { db } from "@/db";
+import { getSettings } from "@/lib/settings";
 import type {
   Agent,
   Application,
   Amenity,
+  BuildingFloor,
+  BuildingUnit,
   Conversation,
   Lease,
   Message,
@@ -137,8 +140,15 @@ export async function fetchPublicProperties(filters: {
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = Math.min(24, Math.max(6, filters.pageSize ?? 12));
 
+  const settings = await getSettings();
+
   // Conditions are assembled with positional parameters via db.unsafe.
   const conds: string[] = ["p.status = 'available'"];
+  if (settings.requireLandlordVerification) {
+    conds.push(
+      "exists (select 1 from landlords ld where ld.id = p.owner_id and ld.verification_status = 'verified')"
+    );
+  }
   const params: unknown[] = [];
   const param = (value: unknown): string => {
     params.push(value);
@@ -480,4 +490,49 @@ export async function fetchPropertiesByAgent(
     order by p.created_at desc
   `;
   return attachPropertyRelations(rows);
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Building floors & units                                            */
+/* ------------------------------------------------------------------ */
+
+export interface FloorWithUnits extends BuildingFloor {
+  units: BuildingUnit[];
+}
+
+export async function fetchFloorsWithUnits(propertyId: string): Promise<FloorWithUnits[]> {
+  const floors = await db<BuildingFloor[]>`
+    select * from building_floors where property_id = ${propertyId} order by position, name
+  `;
+  if (floors.length === 0) {
+    // Units without a floor (flat structure)
+    const units = await db<BuildingUnit[]>`
+      select * from building_units where property_id = ${propertyId} and floor_id is null
+      order by unit_number
+    `;
+    return [{ id: "no-floor", property_id: propertyId, name: "Ground", position: 0, created_at: new Date().toISOString(), units }];
+  }
+  const ids = floors.map((f) => f.id);
+  const units = await db<BuildingUnit[]>`
+    select * from building_units where property_id = ${propertyId}
+      and (floor_id = any(${ids}) or floor_id is null)
+    order by unit_number
+  `;
+  const unitMap = new Map<string, BuildingUnit[]>();
+  for (const u of units) {
+    const key = u.floor_id ?? "no-floor";
+    const arr = unitMap.get(key) ?? [];
+    arr.push(u);
+    unitMap.set(key, arr);
+  }
+  return floors.map((f) => ({ ...f, units: unitMap.get(f.id) ?? [] }));
+}
+
+export async function countAvailableUnits(propertyId: string): Promise<number> {
+  const rows = await db<{ n: number }[]>`
+    select count(*)::int as n from building_units
+    where property_id = ${propertyId} and status = 'available'
+  `;
+  return rows[0]?.n ?? 0;
 }

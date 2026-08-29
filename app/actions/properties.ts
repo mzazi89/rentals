@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { requireProfile } from "@/lib/auth/helpers";
+import { isOwnerRole } from "@/lib/auth/helpers";
 import { assertRole } from "@/lib/permissions";
 import { makePropertySlug } from "@/lib/slug";
 import { getSettings } from "@/lib/settings";
@@ -42,7 +43,7 @@ interface SaveStepInput {
 
 export async function savePropertyStep(input: SaveStepInput): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
   const id = profile.id;
 
   // Validate the current step
@@ -98,7 +99,7 @@ export async function savePropertyStep(input: SaveStepInput): Promise<ActionResu
   const owned = await db<{ id: string }[]>`
     select id from properties where id = ${propertyId} and (owner_id = ${id} or agent_id = ${id})
   `;
-  if (owned.length === 0 && profile.role !== "admin") {
+  if (owned.length === 0 && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to edit this property." };
   }
 
@@ -141,7 +142,7 @@ export async function savePropertyStep(input: SaveStepInput): Promise<ActionResu
 
 export async function submitPropertyForReview(propertyId: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
   const settings = await getSettings();
 
   const property = await db<{ id: string; owner_id: string; agent_id: string | null }[]>`
@@ -149,7 +150,7 @@ export async function submitPropertyForReview(propertyId: string): Promise<Actio
   `;
   if (!property[0]) return { ok: false, error: "Property not found." };
   const p = property[0];
-  if (p.owner_id !== profile.id && p.agent_id !== profile.id && profile.role !== "admin") {
+  if (p.owner_id !== profile.id && p.agent_id !== profile.id && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to submit this property." };
   }
 
@@ -166,12 +167,12 @@ export async function submitPropertyForReview(propertyId: string): Promise<Actio
 
 export async function addPropertyImage(propertyId: string, url: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
 
   const owned = await db<{ id: string }[]>`
     select id from properties where id = ${propertyId} and (owner_id = ${profile.id} or agent_id = ${profile.id})
   `;
-  if (owned.length === 0 && profile.role !== "admin") {
+  if (owned.length === 0 && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to edit this property." };
   }
 
@@ -189,14 +190,14 @@ export async function addPropertyImage(propertyId: string, url: string): Promise
 
 export async function removePropertyImage(imageId: string, url: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
 
   const row = await db<{ property_id: string }[]>`select property_id from property_images where id = ${imageId}`;
   if (row[0]) {
     const owned = await db<{ id: string }[]>`
       select id from properties where id = ${row[0].property_id} and (owner_id = ${profile.id} or agent_id = ${profile.id})
     `;
-    if (owned.length === 0 && profile.role !== "admin") {
+    if (owned.length === 0 && !isOwnerRole(profile.role)) {
       return { ok: false, error: "You do not have permission to edit this property." };
     }
     await db`delete from property_images where id = ${imageId}`;
@@ -208,12 +209,12 @@ export async function removePropertyImage(imageId: string, url: string): Promise
 
 export async function setPrimaryImage(imageId: string, propertyId: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
 
   const owned = await db<{ id: string }[]>`
     select id from properties where id = ${propertyId} and (owner_id = ${profile.id} or agent_id = ${profile.id})
   `;
-  if (owned.length === 0 && profile.role !== "admin") {
+  if (owned.length === 0 && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to edit this property." };
   }
 
@@ -225,12 +226,12 @@ export async function setPrimaryImage(imageId: string, propertyId: string): Prom
 
 export async function deleteProperty(propertyId: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
 
   const owned = await db<{ id: string }[]>`
     select id from properties where id = ${propertyId} and (owner_id = ${profile.id} or agent_id = ${profile.id})
   `;
-  if (owned.length === 0 && profile.role !== "admin") {
+  if (owned.length === 0 && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to delete this property." };
   }
 
@@ -253,12 +254,12 @@ export async function deleteProperty(propertyId: string): Promise<ActionResult> 
 
 export async function deactivateProperty(propertyId: string): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
 
   const owned = await db<{ id: string }[]>`
     select id from properties where id = ${propertyId} and (owner_id = ${profile.id} or agent_id = ${profile.id})
   `;
-  if (owned.length === 0 && profile.role !== "admin") {
+  if (owned.length === 0 && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to update this property." };
   }
 

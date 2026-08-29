@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { requireProfile } from "@/lib/auth/helpers";
+import { isOwnerRole } from "@/lib/auth/helpers";
 import { assertRole } from "@/lib/permissions";
 import { createRentRecordsForLease } from "@/lib/rent";
 import { createNotification } from "@/lib/notifications";
@@ -18,7 +19,7 @@ type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: str
  */
 export async function createLease(values: z.infer<typeof leaseCreateSchema>): Promise<ActionResult> {
   const profile = await requireProfile();
-  assertRole(profile, ["agent", "landlord", "admin"]);
+  assertRole(profile, ["agent", "landlord", "owner", "admin"]);
   const parsed = leaseCreateSchema.safeParse(values);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
@@ -44,7 +45,7 @@ export async function createLease(values: z.infer<typeof leaseCreateSchema>): Pr
 
   const isAgent = app.agent_id === profile.id;
   const isLandlord = app.owner_id === profile.id;
-  if (!isAgent && !isLandlord && profile.role !== "admin") {
+  if (!isAgent && !isLandlord && !isOwnerRole(profile.role)) {
     return { ok: false, error: "You do not have permission to create a lease for this property." };
   }
 

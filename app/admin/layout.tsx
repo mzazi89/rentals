@@ -15,7 +15,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { requireProfile } from "@/lib/auth/helpers";
+import { requireProfile, isOwnerRole } from "@/lib/auth/helpers";
 import { DashboardTopbar } from "@/components/dashboard";
 
 const LINKS = [
@@ -38,7 +38,7 @@ const LINKS = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile();
-  if (profile.role !== "admin") redirect("/forbidden");
+  if (!isOwnerRole(profile.role) && profile.role !== "owner") redirect("/forbidden");
 
   return (
     <div className="flex min-h-screen flex-col">

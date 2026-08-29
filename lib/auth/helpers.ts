@@ -62,6 +62,7 @@ export function dashboardPathForRole(role: Role | null | undefined): string | nu
       return "/dashboard/agent";
     case "landlord":
       return "/dashboard/landlord";
+    case "owner":
     case "admin":
       return "/admin";
     default:
@@ -76,5 +77,10 @@ export function redirectToDashboard(role: Role | null | undefined): never {
 }
 
 export async function isAdminProfile(profile: Profile): Promise<boolean> {
-  return profile.role === "admin" && profile.status === "active";
+  return (profile.role === "admin" || profile.role === "owner") && profile.status === "active";
+}
+
+/** Top-level platform operator (owner or legacy admin alias). */
+export function isOwnerRole(role: Role | null | undefined): boolean {
+  return role === "owner" || role === "admin";
 }

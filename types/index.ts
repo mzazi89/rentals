@@ -1,6 +1,6 @@
 // RentHub — shared domain types (mirrors the Supabase schema)
 
-export type Role = "tenant" | "agent" | "landlord" | "admin";
+export type Role = "tenant" | "agent" | "landlord" | "owner" | "admin";
 
 export type AccountStatus = "active" | "suspended";
 
@@ -82,9 +82,13 @@ export interface Landlord {
   id: string;
   company_name: string | null;
   address: string | null;
+  verification_status: LandlordVerificationStatus;
+  verification_notes: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export type LandlordVerificationStatus = "pending" | "verified" | "rejected" | "info_requested";
 
 export interface Tenant {
   id: string;
@@ -325,6 +329,29 @@ export interface NotificationPreferences {
   notify_system: boolean;
   email_enabled: boolean;
   in_app_enabled: boolean;
+}
+
+export type UnitStatus = "available" | "reserved" | "occupied" | "inactive";
+
+export interface BuildingFloor {
+  id: string;
+  property_id: string;
+  name: string;
+  position: number;
+  created_at: string;
+}
+
+export interface BuildingUnit {
+  id: string;
+  property_id: string;
+  floor_id: string | null;
+  unit_number: string;
+  status: UnitStatus;
+  tenant_id: string | null;
+  created_at: string;
+  updated_at: string;
+  floor?: BuildingFloor | null;
+  tenant?: Partial<Profile> | null;
 }
 
 export interface Review {
