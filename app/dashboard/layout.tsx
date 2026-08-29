@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect(`/signup/onboarding/${profile.role}`);
   }
   if (profile.status === "suspended") redirect("/account-suspended");
-  if (profile.role === "admin") redirect("/admin");
+  if (isOwnerRole(profile.role)) redirect("/admin");
 
   return (
     <div className="flex min-h-screen flex-col">
