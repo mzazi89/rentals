@@ -156,6 +156,8 @@ export async function fetchPublicProperties(filters: {
   };
   const like = (col: string, value: string) => `p.${col} ilike ${param(`%${value}%`)}`;
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   if (filters.q) {
     conds.push(like("title", filters.q), like("city", filters.q));
   }
@@ -166,7 +168,9 @@ export async function fetchPublicProperties(filters: {
   }
   if (filters.county) conds.push(like("county", filters.county));
   if (filters.neighborhood) conds.push(like("neighborhood", filters.neighborhood));
-  if (filters.type) conds.push(`p.property_type_id = ${param(filters.type)}`);
+  // type/amenity filters reference uuid columns — ignore malformed (non-UUID)
+  // values instead of crashing the page with an invalid-uuid SQL error.
+  if (filters.type && UUID_RE.test(filters.type)) conds.push(`p.property_type_id = ${param(filters.type)}`);
   if (filters.minRent !== undefined) conds.push(`p.monthly_rent >= ${param(filters.minRent)}`);
   if (filters.maxRent !== undefined) conds.push(`p.monthly_rent <= ${param(filters.maxRent)}`);
   if (filters.bedrooms !== undefined && filters.bedrooms > 0) conds.push(`p.bedrooms >= ${param(filters.bedrooms)}`);
@@ -175,9 +179,10 @@ export async function fetchPublicProperties(filters: {
   if (filters.verifiedOnly) conds.push("p.verified = true");
   if (filters.featuredOnly) conds.push("p.featured = true");
 
-  if (filters.amenities && filters.amenities.length > 0) {
+  const validAmenities = (filters.amenities ?? []).filter((a) => UUID_RE.test(a));
+  if (validAmenities.length > 0) {
     conds.push(
-      `p.id in (select property_id from property_amenities where amenity_id = any(${param(filters.amenities)}) group by property_id having count(distinct amenity_id) = ${param(filters.amenities.length)})`
+      `p.id in (select property_id from property_amenities where amenity_id = any(${param(validAmenities)}) group by property_id having count(distinct amenity_id) = ${param(validAmenities.length)})`
     );
   }
 

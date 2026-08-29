@@ -39,13 +39,26 @@ export async function GET(request: NextRequest) {
   }
 
   async function ensureUser(email: string, name: string, role: string) {
-    const existing = await db<{ id: string }[]>`select id from profiles where email = ${email}`;
-    if (existing[0]) return existing[0].id;
-    const { user } = await auth.api.signUpEmail({ body: { email, password: DEMO_PASSWORD, name } });
-    if (!user) throw new Error(`signup failed for ${email}`);
-    await db`update profiles set role = ${role}, is_onboarded = true where id = ${user.id}`;
-    await db`update "user" set role = ${role} where id = ${user.id}`;
-    return user.id;
+    const existingProfile = await db<{ id: string }[]>`select id from profiles where email = ${email}`;
+    if (existingProfile[0]) return existingProfile[0].id;
+
+    // Auth user may already exist (e.g. a previous partial seed) — reuse it
+    // and create the missing profile instead of failing the FK chain.
+    const existingUser = await db<{ id: string }[]>`select id from "user" where email = ${email}`;
+    let userId = existingUser[0]?.id ?? null;
+    if (!userId) {
+      const { user } = await auth.api.signUpEmail({ body: { email, password: DEMO_PASSWORD, name } });
+      if (!user) throw new Error(`signup failed for ${email}`);
+      userId = user.id;
+    }
+
+    await db`
+      insert into profiles (id, email, full_name, role, status, is_onboarded)
+      values (${userId}, ${email}, ${name}, ${role}, 'active', true)
+      on conflict (id) do update set role = ${role}, is_onboarded = true
+    `;
+    await db`update "user" set role = ${role} where id = ${userId}`;
+    return userId;
   }
 
   try {
