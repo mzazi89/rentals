@@ -7,9 +7,23 @@ import postgres from "postgres";
  * All database access goes through this singleton — authorization is
  * enforced in the application layer (there is no RLS in Neon).
  */
+
+// During `next build`, pages are prerendered — a real database may not be
+// reachable (CI, no local Postgres). Return empty results instead of
+// failing the build; at runtime the real client is used.
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+const rawUrl = process.env.DATABASE_URL?.trim();
+const isProduction = process.env.NODE_ENV === "production";
+
+if (!rawUrl && isProduction && !isBuildPhase) {
+  throw new Error(
+    "DATABASE_URL is not set. Add your Neon connection string to the environment (Vercel → Project → Settings → Environment Variables)."
+  );
+}
+
 const connectionString =
-  process.env.DATABASE_URL ??
-  "postgresql://postgres:postgres@localhost:5432/renthub";
+  rawUrl || "postgresql://postgres:postgres@localhost:5432/renthub";
 
 const realDb = postgres(connectionString, {
   max: 10,
@@ -18,11 +32,6 @@ const realDb = postgres(connectionString, {
   prepare: false,
 });
 
-// During `next build`, pages are prerendered — a real database may not be
-// reachable (CI, no local Postgres). Return empty results instead of
-// failing the build; at runtime (NEXT_PHASE unset) the real client is used
-// and ISR/static generation hits the database normally.
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 const emptyResult = {
   then: (resolve: (value: never[]) => void) => resolve([]),
 };
