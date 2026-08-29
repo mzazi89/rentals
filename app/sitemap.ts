@@ -1,8 +1,9 @@
 import { db } from "@/db";
+import { getAppUrl } from "@/lib/env-public";
 
 export const dynamic = "force-dynamic";
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const BASE = getAppUrl();
 
 export default async function sitemap() {
   const [properties, agents] = await Promise.all([

@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { db } from "@/db";
 import { getPaymentProvider, generatePaymentReference, type InitiatePaymentParams } from "./index";
 import { getSettings } from "@/lib/settings";
+import { getAppUrl } from "@/lib/env-public";
 import { createNotification } from "@/lib/notifications";
 import { audit } from "@/lib/audit";
 
@@ -58,8 +59,8 @@ export async function initiatePayment(params: InitiatePaymentParams): Promise<{
   if (!paymentId) throw new Error("Failed to create payment record.");
 
   const callbackUrl = params.redirectPath
-    ? `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}${params.redirectPath}`
-    : `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/dashboard/tenant/payments`;
+    ? `${getAppUrl()}${params.redirectPath}`
+    : `${getAppUrl()}/dashboard/tenant/payments`;
 
   const { authorizationUrl } = await provider.initialize({
     amount: params.amount,

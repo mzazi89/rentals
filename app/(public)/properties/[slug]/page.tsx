@@ -21,6 +21,7 @@ import {
 import { getSettings } from "@/lib/settings";
 import { getCurrentUser } from "@/lib/auth/helpers";
 import { buildMetadata } from "@/lib/seo";
+import { getAppUrl } from "@/lib/env-public";
 import { formatDate, formatMoney } from "@/lib/utils";
 import { PropertyGallery, AmenitiesList, VerificationBadge, FavoriteButton } from "@/components/properties";
 import { PropertyDetailActions } from "@/components/property-detail-actions";
@@ -67,7 +68,7 @@ export default async function PropertyDetailPage({ params }: { params: { slug: s
     name: property.title,
     description: property.description ?? undefined,
     image: imageUrl ?? undefined,
-    url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/properties/${property.slug}`,
+    url: `${getAppUrl()}/properties/${property.slug}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: property.city ?? undefined,

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
+import { getAppUrl } from "@/lib/env-public";
 import type { InitializePaymentInput, PaymentProvider, VerifyResult } from "../types";
 
 /**
@@ -14,7 +15,7 @@ export class MockProvider implements PaymentProvider {
   readonly name = "mock";
 
   async initialize(input: InitializePaymentInput) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = getAppUrl();
     const url = new URL("/api/payments/mock-complete", appUrl);
     url.searchParams.set("reference", input.reference);
     url.searchParams.set("redirect", input.callbackUrl ?? "/dashboard/tenant/payments");

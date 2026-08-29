@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/feedback";
+import { getAppUrl } from "@/lib/env-public";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getAppUrl()),
   title: {
     default: "RentHub — Rental Properties in Kenya",
     template: "%s | RentHub",

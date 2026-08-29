@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { rateLimit } from "@/lib/rate-limit";
+import { getAppUrl } from "@/lib/env-public";
 import { audit } from "@/lib/audit";
 import {
   signupSchema,

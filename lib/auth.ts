@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { db } from "@/db";
 import { sendEmail } from "@/lib/email";
 
-const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const baseURL = process.env.BETTER_AUTH_URL?.trim() || "http://localhost:3000";
 const requireEmailVerification = process.env.AUTH_REQUIRE_EMAIL_VERIFICATION === "true";
 
 /** Drizzle instance over the same postgres.js client (auth adapter only). */

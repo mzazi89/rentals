@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { sendEmail } from "@/lib/email";
 import { getSettings } from "@/lib/settings";
+import { getAppUrl } from "@/lib/env-public";
 import type { NotificationType } from "@/types";
 
 interface NotificationInput {
@@ -65,7 +66,7 @@ export async function createNotification(input: NotificationInput): Promise<void
     `;
     if (profile[0]?.email) {
       const settings = await getSettings();
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+      const baseUrl = getAppUrl();
       const linkHref = input.link ? `${baseUrl}${input.link}` : baseUrl;
       void sendEmail({
         to: profile[0].email,

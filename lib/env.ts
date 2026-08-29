@@ -13,7 +13,7 @@ export function getServerEnv() {
     ...pub,
     databaseUrl: process.env.DATABASE_URL ?? null,
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? null,
-    betterAuthUrl: process.env.BETTER_AUTH_URL ?? pub.appUrl,
+    betterAuthUrl: process.env.BETTER_AUTH_URL?.trim() || pub.appUrl,
     storageProvider: process.env.STORAGE_PROVIDER ?? "local",
     paymentProvider: process.env.PAYMENT_PROVIDER ?? "mock",
     paymentPublicKey: process.env.PAYMENT_PUBLIC_KEY ?? "",
