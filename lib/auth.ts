@@ -2,6 +2,7 @@ import "server-only";
 
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { db } from "@/db";
 import { sendEmail } from "@/lib/email";
@@ -9,11 +10,74 @@ import { sendEmail } from "@/lib/email";
 const baseURL = process.env.BETTER_AUTH_URL?.trim() || "http://localhost:3000";
 const requireEmailVerification = process.env.AUTH_REQUIRE_EMAIL_VERIFICATION === "true";
 
-/** Drizzle instance over the same postgres.js client (auth adapter only). */
-const drizzleDb = drizzle(db);
+/**
+ * Drizzle schema for Better Auth — must match db/migrations/000001 + 000004
+ * exactly (quoted camelCase columns). The Drizzle adapter requires the schema
+ * to be passed explicitly, otherwise it cannot map the auth models.
+ */
+const userTable = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("emailVerified").notNull().default(false),
+  image: text("image"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+const sessionTable = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  ipAddress: text("ipAddress"),
+  userAgent: text("userAgent"),
+  userId: text("userId")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "cascade" }),
+});
+
+const accountTable = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("accountId").notNull(),
+  providerId: text("providerId").notNull(),
+  userId: text("userId")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  idToken: text("idToken"),
+  accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
+  refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+  scope: text("scope"),
+  password: text("password"),
+  issuer: text("issuer"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+const verificationTable = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+const authSchema = {
+  user: userTable,
+  session: sessionTable,
+  account: accountTable,
+  verification: verificationTable,
+};
+
+/** Drizzle instance over the same postgres.js client, bound to the auth schema. */
+const drizzleDb = drizzle(db, { schema: authSchema });
 
 export const auth = betterAuth({
-  database: drizzleAdapter(drizzleDb, { provider: "pg" }),
+  database: drizzleAdapter(drizzleDb, { provider: "pg", schema: authSchema }),
   baseURL,
   secret: process.env.BETTER_AUTH_SECRET,
   emailAndPassword: {
@@ -54,22 +118,6 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // sliding renewal every 24h
-  },
-  // Enables server-side user creation (used by the admin bootstrap route).
-  admin: {
-    enabled: true,
-    defaultRole: "user",
-  },
-  user: {
-    additionalFields: {
-      // mirrors profiles.role for convenient session access
-      role: {
-        type: "string",
-        required: false,
-        defaultValue: "user",
-        input: false,
-      },
-    },
   },
   advanced: {
     defaultCookieAttributes: {

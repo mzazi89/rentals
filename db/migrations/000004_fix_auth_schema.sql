@@ -1,8 +1,17 @@
--- RentHub — Neon migration 000001: Better Auth tables
--- (camelCase columns are what the better-auth drizzle adapter expects —
---  they MUST be double-quoted so Postgres keeps the exact case)
+-- RentHub — 000004: fix Better Auth table column casing
+-- The original auth tables used UNQUOTED camelCase column names, which
+-- Postgres folds to lowercase (emailverified / createdat / updatedat).
+-- Better Auth's drizzle adapter queries exact-case quoted columns
+-- ("emailVerified", "createdAt", "updatedAt"), so every auth operation
+-- failed. No rows exist in these tables yet, so we recreate them with
+-- correctly quoted identifiers and restore the profiles foreign key.
 
-create table if not exists "user" (
+drop table if exists "verification" cascade;
+drop table if exists "account" cascade;
+drop table if exists "session" cascade;
+drop table if exists "user" cascade;
+
+create table "user" (
   "id" text primary key,
   "name" text not null,
   "email" text not null unique,
@@ -13,7 +22,7 @@ create table if not exists "user" (
   "role" text not null default 'user'
 );
 
-create table if not exists "session" (
+create table "session" (
   "id" text primary key,
   "expiresAt" timestamp not null,
   "token" text not null unique,
@@ -26,7 +35,7 @@ create table if not exists "session" (
 
 create index if not exists session_user_idx on "session" ("userId");
 
-create table if not exists "account" (
+create table "account" (
   "id" text primary key,
   "accountId" text not null,
   "providerId" text not null,
@@ -44,7 +53,7 @@ create table if not exists "account" (
 
 create index if not exists account_user_idx on "account" ("userId");
 
-create table if not exists "verification" (
+create table "verification" (
   "id" text primary key,
   "identifier" text not null,
   "value" text not null,
@@ -52,3 +61,8 @@ create table if not exists "verification" (
   "createdAt" timestamp not null default now(),
   "updatedAt" timestamp not null default now()
 );
+
+-- Restore the profiles → user foreign key (dropped by CASCADE above).
+alter table profiles
+  add constraint profiles_id_fkey
+  foreign key (id) references "user"(id) on delete cascade;
