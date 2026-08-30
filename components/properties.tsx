@@ -75,6 +75,7 @@ export function FavoriteButton({
   const [favorited, setFavorited] = React.useState<boolean | null>(initialFavorited ? true : null);
   const [loading, setLoading] = React.useState(false);
   const [promptOpen, setPromptOpen] = React.useState(false);
+  const router = useRouter();
   const { toast } = useToast();
 
   // When no initial state is given, resolve the current state once.
