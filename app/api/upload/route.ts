@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { db } from "@/db";
 
 const BUCKETS = ["property-images", "profile-images", "documents"] as const;
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -8,7 +7,9 @@ const MAX_BYTES = 10 * 1024 * 1024;
 /**
  * Image upload endpoint (single path for all providers).
  *  - Vercel Blob configured (BLOB_READ_WRITE_TOKEN) → server-side `put()`
- *  - otherwise → local filesystem under public/uploads (dev mode)
+ *  - otherwise → Postgres `stored_files`, served from /api/files/[id]
+ *    (serverless filesystems are read-only/ephemeral, so local disk is NOT
+ *    a viable production provider)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -45,11 +46,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url });
     }
 
-    // Local provider (development)
-    const dir = join(process.cwd(), "public", "uploads", bucket, folder);
-    await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, name), bytes);
-    return NextResponse.json({ url: `/uploads/${bucket}/${folder}/${name}` });
+    // Database-backed provider (works on read-only serverless filesystems)
+    const id = crypto.randomUUID();
+    await db`
+      insert into stored_files (id, bucket, folder, filename, content_type, size_bytes, data)
+      values (${id}, ${bucket}, ${folder}, ${name}, ${file.type}, ${bytes.length}, ${bytes})
+    `;
+    return NextResponse.json({ url: `/api/files/${id}` });
   } catch (err) {
     console.error("[upload] failed", err);
     return NextResponse.json({ error: "upload failed" }, { status: 500 });
