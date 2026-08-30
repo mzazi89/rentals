@@ -54,29 +54,26 @@ export function PublicHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/login"
+            className="rounded-md px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+          >
+            Get started
+          </Link>
           {signedIn ? (
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-md border border-primary/30 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
             >
               <LayoutDashboard className="size-4" /> Dashboard
             </Link>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="rounded-md px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-              >
-                Get started
-              </Link>
-            </>
-          )}
+          ) : null}
         </div>
         <button
           aria-label={open ? "Close menu" : "Open menu"}
@@ -101,32 +98,29 @@ export function PublicHeader() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2 border-t pt-3">
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="flex-1 rounded-md border px-4 py-2.5 text-center text-sm font-medium"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setOpen(false)}
+                className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
+              >
+                Get started
+              </Link>
               {signedIn ? (
                 <Link
                   href="/dashboard"
                   onClick={() => setOpen(false)}
-                  className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
+                  className="flex-1 rounded-md border border-primary/30 px-4 py-2.5 text-center text-sm font-medium text-primary"
                 >
                   Dashboard
                 </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    onClick={() => setOpen(false)}
-                    className="flex-1 rounded-md border px-4 py-2.5 text-center text-sm font-medium"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/signup"
-                    onClick={() => setOpen(false)}
-                    className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
-                  >
-                    Get started
-                  </Link>
-                </>
-              )}
+              ) : null}
             </div>
           </div>
         </nav>
