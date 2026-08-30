@@ -20,6 +20,9 @@ import { AgentCard, type AgentWithProfileCard } from "@/components/agents";
 
 export const dynamic = "force-dynamic";
 
+const HERO_IMAGE = "https://sc02.alicdn.com/kf/Aee86ed55183f40e5b6d3be876c8896816.png";
+const CTA_IMAGE = "https://sc02.alicdn.com/kf/Ab8730c0b48284b1ea8fa9315126ccbf10.png";
+
 async function fetchStats() {
   const [properties, agents, tenants, counties] = await Promise.all([
     db<{ n: number }[]>`select count(*)::int as n from properties where status = any(${PUBLIC_STATUSES})`,
@@ -54,24 +57,26 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-primary text-primary-foreground">
+      <section className="relative overflow-hidden text-white">
+        <img
+          src={HERO_IMAGE}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
         <div
           aria-hidden
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, #ffffff55 0, transparent 40%), radial-gradient(circle at 80% 70%, #f9731655 0, transparent 40%)",
-          }}
+          className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/80"
         />
         <div className="container relative py-16 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
               <ShieldCheck className="size-3.5" /> Trusted rental marketplace — Kenya
             </span>
-            <h1 className="mt-5 text-3xl font-bold leading-tight sm:text-5xl">
+            <h1 className="mt-5 text-3xl font-bold leading-tight text-white sm:text-5xl">
               {settings.tagline}
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/85 sm:text-base">
+            <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base">
               Search verified rental properties, connect with trusted agents, schedule
               viewings, and manage your rental journey from one platform.
             </p>
@@ -89,8 +94,8 @@ export default async function HomePage() {
               { value: `${stats.tenants}+`, label: "Happy Tenants" },
             ].map((s) => (
               <div key={s.label}>
-                <p className="text-2xl font-bold sm:text-3xl">{s.value}</p>
-                <p className="mt-0.5 text-xs text-primary-foreground/75 sm:text-sm">{s.label}</p>
+                <p className="text-2xl font-bold text-white sm:text-3xl">{s.value}</p>
+                <p className="mt-0.5 text-xs text-white/75 sm:text-sm">{s.label}</p>
               </div>
             ))}
           </div>
@@ -204,8 +209,8 @@ export default async function HomePage() {
 
       {/* ── Safety banner ────────────────────────────────────── */}
       <section className="container pb-12">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-900 sm:flex-row sm:text-left">
-          <ShieldCheck className="size-8 shrink-0 text-amber-600" />
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center text-sm text-amber-100 sm:flex-row sm:text-left">
+          <ShieldCheck className="size-8 shrink-0 text-amber-400" />
           <p>
             <strong>Stay safe.</strong> {settings.safetyTip}{" "}
             <Link href="/safety" className="font-medium underline">Read our rental safety guide →</Link>
@@ -215,24 +220,33 @@ export default async function HomePage() {
 
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="container pb-16">
-        <div className="flex flex-col items-center gap-5 rounded-2xl bg-primary p-10 text-center text-primary-foreground sm:p-14">
-          <h2 className="text-2xl font-bold sm:text-3xl">Ready to find your next home?</h2>
-          <p className="max-w-lg text-sm text-primary-foreground/85">
-            Join RentHub today — whether you're renting, letting or listing properties.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-primary shadow hover:bg-white/90"
-            >
-              <Users className="size-4" /> Create free account
-            </Link>
-            <Link
-              href="/properties"
-              className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/40 px-6 text-sm font-semibold hover:bg-white/10"
-            >
-              <Home className="size-4" /> Browse properties
-            </Link>
+        <div className="relative overflow-hidden rounded-2xl p-10 text-center text-white sm:p-14">
+          <img
+            src={CTA_IMAGE}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div aria-hidden className="absolute inset-0 bg-black/70" />
+          <div className="relative flex flex-col items-center gap-5">
+            <h2 className="text-2xl font-bold sm:text-3xl">Ready to find your next home?</h2>
+            <p className="max-w-lg text-sm text-white/85">
+              Join RentHub today — whether you're renting, letting or listing properties.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-foreground shadow hover:bg-white/90"
+              >
+                <Users className="size-4" /> Create free account
+              </Link>
+              <Link
+                href="/properties"
+                className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/40 px-6 text-sm font-semibold hover:bg-white/10"
+              >
+                <Home className="size-4" /> Browse properties
+              </Link>
+            </div>
           </div>
         </div>
       </section>

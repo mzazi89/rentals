@@ -98,10 +98,10 @@ export function Alert({
   className?: string;
 }) {
   const styles = {
-    info: "border-blue-200 bg-blue-50 text-blue-800",
-    success: "border-green-200 bg-green-50 text-green-800",
-    warning: "border-amber-200 bg-amber-50 text-amber-800",
-    error: "border-red-200 bg-red-50 text-red-800",
+    info: "border-blue-500/40 bg-blue-500/10 text-blue-100",
+    success: "border-green-500/40 bg-green-500/10 text-green-100",
+    warning: "border-amber-500/40 bg-amber-500/10 text-amber-100",
+    error: "border-red-500/40 bg-red-500/10 text-red-100",
   }[variant];
   const Icon = variant === "error" ? AlertCircle : variant === "success" ? CheckCircle2 : Info;
   return (
@@ -200,8 +200,8 @@ export function Toaster() {
               key={t.id}
               className={cn(
                 "animate-slide-in flex items-start gap-2 rounded-lg border bg-popover p-3 text-sm shadow-lift",
-                t.variant === "success" && "border-green-200 text-green-800",
-                t.variant === "error" && "border-red-200 text-red-800",
+                t.variant === "success" && "border-green-500/40 text-green-200",
+                t.variant === "error" && "border-red-500/40 text-red-200",
                 t.variant === "info" && "border-border text-foreground"
               )}
             >

@@ -25,10 +25,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  available: "border-green-300 bg-green-50 text-green-800",
-  reserved: "border-amber-300 bg-amber-50 text-amber-800",
-  occupied: "border-red-300 bg-red-50 text-red-800",
-  inactive: "border-gray-300 bg-gray-50 text-gray-600",
+  available: "border-green-500/40 bg-green-500/10 text-green-200",
+  reserved: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+  occupied: "border-red-500/40 bg-red-500/10 text-red-200",
+  inactive: "border-gray-500/40 bg-gray-500/10 text-gray-300",
 };
 
 export function UnitManager({

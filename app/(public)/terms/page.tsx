@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <div className="container max-w-3xl py-12">
       <h1 className="text-3xl font-bold">Terms of service</h1>
-      <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+      <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
         This is placeholder legal text. Have it reviewed and customised by a lawyer before
         launching publicly.
       </p>

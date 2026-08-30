@@ -336,17 +336,17 @@ export function PropertySearchBar() {
   return (
     <form
       onSubmit={submit}
-      className="grid w-full gap-2 rounded-2xl border bg-white p-3 shadow-lift sm:grid-cols-2 lg:grid-cols-5"
+      className="grid w-full gap-2 rounded-2xl border border-white/15 bg-black/50 p-3 shadow-lift backdrop-blur sm:grid-cols-2 lg:grid-cols-5"
       role="search"
     >
       <label className="relative">
         <span className="sr-only">Location</span>
-        <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50" />
         <input
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder="Location (e.g. Kilimani)"
-          className="h-12 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-12 w-full rounded-lg border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white placeholder:text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </label>
       <label>
@@ -354,11 +354,11 @@ export function PropertySearchBar() {
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="h-12 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-12 w-full rounded-lg border border-white/15 bg-white/10 px-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Property type</option>
           {types.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id} className="bg-background text-foreground">{t.name}</option>
           ))}
         </select>
       </label>
@@ -368,7 +368,7 @@ export function PropertySearchBar() {
         inputMode="numeric"
         placeholder="Min rent (KSh)"
         aria-label="Minimum rent"
-        className="h-12 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-12 w-full rounded-lg border border-white/15 bg-white/10 px-3 text-sm text-white placeholder:text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <input
         value={maxRent}
@@ -376,18 +376,18 @@ export function PropertySearchBar() {
         inputMode="numeric"
         placeholder="Max rent (KSh)"
         aria-label="Maximum rent"
-        className="h-12 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-12 w-full rounded-lg border border-white/15 bg-white/10 px-3 text-sm text-white placeholder:text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <div className="flex gap-2">
         <select
           value={bedrooms}
           onChange={(e) => setBedrooms(e.target.value)}
           aria-label="Bedrooms"
-          className="h-12 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-12 w-full rounded-lg border border-white/15 bg-white/10 px-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Bedrooms</option>
           {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>{n}+ Beds</option>
+            <option key={n} value={n} className="bg-background text-foreground">{n}+ Beds</option>
           ))}
         </select>
         <button
