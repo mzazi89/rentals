@@ -59,7 +59,7 @@ export default async function AdminUsersPage({
                       <Td><StatusBadge status={u.status} /></Td>
                       <Td className="text-xs text-muted-foreground">{formatDate(u.created_at)}</Td>
                       <Td className="text-right">
-                        <AdminUserActions userId={u.id} status={u.status} isAdmin={u.role === "admin"} />
+                        <AdminUserActions userId={u.id} status={u.status} isAdmin={u.role === "admin"} currentRole={u.role} />
                       </Td>
                     </TRow>
                   ))}

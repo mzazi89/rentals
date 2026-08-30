@@ -13,6 +13,7 @@ import {
   suspendUser,
   reactivateUser,
   deleteUser,
+  adminSetRole,
   resolveReport,
   moderateReview,
   updateCommissionStatus,
@@ -26,15 +27,18 @@ export function AdminUserActions({
   userId,
   status,
   isAdmin,
+  currentRole,
 }: {
   userId: string;
   status: string;
   isAdmin: boolean;
+  currentRole?: string | null;
 }) {
   const { toast } = useToast();
   const router = useRouter();
   const [confirm, setConfirm] = React.useState<null | "suspend" | "delete">(null);
   const [busy, setBusy] = React.useState(false);
+  const [role, setRole] = React.useState(currentRole ?? "");
 
   const run = async (fn: () => Promise<{ ok: boolean; error?: string }>, msg: string) => {
     setBusy(true);
@@ -49,10 +53,39 @@ export function AdminUserActions({
     setConfirm(null);
   };
 
+  const setUserRole = async () => {
+    if (!role || role === currentRole) return;
+    setBusy(true);
+    const result = await adminSetRole({ userId, role: role as "tenant" | "agent" | "landlord" });
+    if (result.ok) {
+      toast("Role assigned — user now signs in directly", "success");
+      router.refresh();
+    } else {
+      toast(result.error ?? "Could not set role.", "error");
+    }
+    setBusy(false);
+  };
+
   if (isAdmin) return null;
 
   return (
     <>
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          aria-label="Set role"
+          className="h-8 w-36 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">— set role —</option>
+          <option value="tenant">Tenant</option>
+          <option value="agent">Agent</option>
+          <option value="landlord">Landlord</option>
+        </select>
+        <Button size="sm" variant="outline" onClick={setUserRole} disabled={busy || !role || role === currentRole}>
+          <Check className="size-3.5" /> Save
+        </Button>
+      </div>
       <DropdownMenu trigger={<Button size="sm" variant="outline">Actions</Button>}>
         {() => (
           <>

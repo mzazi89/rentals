@@ -239,6 +239,50 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+/* ------------------------------------------------------------------ */
+/* Owner assigns a user's role (so login stays direct — no role screen) */
+/* ------------------------------------------------------------------ */
+const adminSetRoleSchema = z.object({
+  userId: authId,
+  role: z.enum(["tenant", "agent", "landlord"]),
+});
+
+export async function adminSetRole(values: z.infer<typeof adminSetRoleSchema>): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = adminSetRoleSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  const { userId, role } = parsed.data;
+
+  const target = await db<{ role: string | null }[]>`select role from profiles where id = ${userId}`;
+  if (!target[0]) return { ok: false, error: "User not found." };
+  if (target[0].role === "owner" || target[0].role === "admin") {
+    return { ok: false, error: "Owner accounts cannot be reassigned." };
+  }
+
+  await db`update profiles set role = ${role}, status = 'active' where id = ${userId}`;
+  await db`update "user" set role = ${role} where id = ${userId}`;
+
+  if (role === "tenant") {
+    await db`insert into tenants (id) values (${userId}) on conflict (id) do nothing`;
+  } else if (role === "agent") {
+    await db`insert into agents (id, verification_status) values (${userId}, 'pending') on conflict (id) do nothing`;
+  } else if (role === "landlord") {
+    await db`insert into landlords (id) values (${userId}) on conflict (id) do nothing`;
+  }
+
+  await createNotification({
+    userId,
+    type: "system_announcement",
+    title: "Account role assigned",
+    body: `Your account has been set up as a ${role}. You can now sign in directly.`,
+    link: "/dashboard",
+  });
+
+  await audit("role_assigned", "profiles", userId, { role });
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
 export async function editUser(values: z.infer<typeof adminUserEditSchema>): Promise<ActionResult> {
   await requireAdmin();
   const parsed = adminUserEditSchema.safeParse(values);
