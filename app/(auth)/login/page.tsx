@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth-forms";
+import { getCurrentUser } from "@/lib/auth/helpers";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -10,7 +12,14 @@ export const metadata = buildMetadata({
   noIndex: true,
 });
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+export default async function LoginPage() {
+  // Middleware bounces cookie-holders to /dashboard, but a genuinely valid
+  // session reaching here (e.g. ?expired=1 link with a fresh session) should
+  // go straight to the dashboard instead of showing the form.
+  if (await getCurrentUser()) redirect("/dashboard");
+
   return (
     <>
       <h1 className="text-2xl font-bold">Welcome back</h1>

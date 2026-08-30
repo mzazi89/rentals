@@ -25,6 +25,13 @@ export function updateSession(request: NextRequest) {
   }
 
   if (sessionCookie && isAuthPage) {
+    // A stale/invalid session cookie (e.g. secret rotated, session expired)
+    // would otherwise bounce: /login -> /dashboard -> /login -> ... forever.
+    // Layouts redirect invalid sessions to /login?expired=1 — let that render
+    // so the user can sign in again instead of looping.
+    if (request.nextUrl.searchParams.get("expired") === "1") {
+      return NextResponse.next({ request });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
