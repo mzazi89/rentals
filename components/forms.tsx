@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, MessageSquare, Send } from "lucide-react";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui/core";
 import { useToast } from "@/components/ui/feedback";
+import { SignInPrompt } from "@/components/sign-in-prompt";
 import { authClient } from "@/lib/auth-client";
 import { viewingCreateSchema, applicationCreateSchema } from "@/lib/validations";
 import { bookViewing } from "@/app/actions/viewings";
@@ -165,6 +166,7 @@ export function ContactAgentButton({
   label?: string;
 }) {
   const [loading, setLoading] = React.useState(false);
+  const [promptOpen, setPromptOpen] = React.useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -173,7 +175,8 @@ export function ContactAgentButton({
     try {
       const session = await authClient.getSession();
       if (!session.data) {
-        router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+        setLoading(false);
+        setPromptOpen(true);
         return;
       }
       const result = await startConversation({ propertyId: propertyId ?? "", agentId });
@@ -190,9 +193,12 @@ export function ContactAgentButton({
   };
 
   return (
-    <Button variant={variant} onClick={handle} loading={loading} className="w-full sm:w-auto">
-      <MessageSquare className="size-4" /> {label}
-    </Button>
+    <>
+      <Button variant={variant} onClick={handle} loading={loading} className="w-full sm:w-auto">
+        <MessageSquare className="size-4" /> {label}
+      </Button>
+      <SignInPrompt open={promptOpen} onClose={() => setPromptOpen(false)} title="Message agents with an account" />
+    </>
   );
 }
 

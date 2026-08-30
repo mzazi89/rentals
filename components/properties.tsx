@@ -18,6 +18,7 @@ import {
 import { cn, formatMoney } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/components/ui/feedback";
+import { SignInPrompt } from "@/components/sign-in-prompt";
 import { getPropertyTypes } from "@/app/actions/data";
 import { getMyFavoriteIds } from "@/app/actions/favorites";
 import { toggleFavorite } from "@/app/actions/favorites";
@@ -73,7 +74,7 @@ export function FavoriteButton({
 }) {
   const [favorited, setFavorited] = React.useState<boolean | null>(initialFavorited ? true : null);
   const [loading, setLoading] = React.useState(false);
-  const router = useRouter();
+  const [promptOpen, setPromptOpen] = React.useState(false);
   const { toast } = useToast();
 
   // When no initial state is given, resolve the current state once.
@@ -97,7 +98,7 @@ export function FavoriteButton({
     e.stopPropagation();
     const session = await authClient.getSession();
     if (!session?.data) {
-      router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      setPromptOpen(true);
       return;
     }
     setLoading(true);
@@ -120,19 +121,22 @@ export function FavoriteButton({
   const active = favorited ?? false;
 
   return (
-    <button
-      type="button"
-      aria-label={active ? "Remove from saved" : "Save property"}
-      aria-pressed={active}
-      disabled={loading}
-      onClick={toggle}
-      className={cn(
-        "flex items-center justify-center rounded-full bg-white/95 shadow transition-transform hover:scale-105 disabled:opacity-60",
-        size === "lg" ? "size-11" : "size-9"
-      )}
-    >
-      <Heart className={cn("size-4", active ? "fill-red-500 text-red-500" : "text-foreground")} />
-    </button>
+    <>
+      <button
+        type="button"
+        aria-label={active ? "Remove from saved" : "Save property"}
+        aria-pressed={active}
+        disabled={loading}
+        onClick={toggle}
+        className={cn(
+          "flex items-center justify-center rounded-full bg-white/95 shadow transition-transform hover:scale-105 disabled:opacity-60",
+          size === "lg" ? "size-11" : "size-9"
+        )}
+      >
+        <Heart className={cn("size-4", active ? "fill-red-500 text-red-500" : "text-foreground")} />
+      </button>
+      <SignInPrompt open={promptOpen} onClose={() => setPromptOpen(false)} title="Save favourite properties" />
+    </>
   );
 }
 

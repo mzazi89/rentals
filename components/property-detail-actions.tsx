@@ -6,6 +6,7 @@ import { CalendarDays, ClipboardCheck, Flag, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/core";
 import { Dialog } from "@/components/ui/overlays";
 import { useToast } from "@/components/ui/feedback";
+import { SignInPrompt } from "@/components/sign-in-prompt";
 import { authClient } from "@/lib/auth-client";
 import { ViewingForm, ApplicationForm, ContactAgentButton } from "@/components/forms";
 import { ReportForm } from "@/components/report-form";
@@ -18,8 +19,8 @@ export function PropertyDetailActions({
   agentId?: string | null;
 }) {
   const [dialog, setDialog] = React.useState<null | "viewing" | "apply" | "report">(null);
+  const [promptOpen, setPromptOpen] = React.useState(false);
   const [authed, setAuthed] = React.useState<boolean | null>(null);
-  const router = useRouter();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -28,8 +29,7 @@ export function PropertyDetailActions({
 
   const requireAuth = (next: "viewing" | "apply" | "report") => {
     if (!authed) {
-      toast("Please sign in to continue.", "info");
-      router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      setPromptOpen(true);
       return;
     }
     setDialog(next);
@@ -89,6 +89,12 @@ export function PropertyDetailActions({
       >
         <ReportForm propertyId={propertyId} onDone={() => setDialog(null)} />
       </Dialog>
+
+      <SignInPrompt
+        open={promptOpen}
+        onClose={() => setPromptOpen(false)}
+        title="Join RentHub to book or apply"
+      />
     </>
   );
 }
