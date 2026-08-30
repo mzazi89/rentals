@@ -82,12 +82,7 @@ export default async function AgentDashboardPage() {
     <div>
       <PageHeader
         title="Agent dashboard"
-        description="Manage your listings, viewings and tenants."
-        actions={
-          <Link href="/dashboard/agent/properties/new" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            + Add property
-          </Link>
-        }
+        description="Work on the properties the owner assigns to you — process tenant requests and mark taken units."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">

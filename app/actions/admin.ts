@@ -10,8 +10,9 @@ import {
   adminVerifyAgentSchema,
   adminPropertyDecisionSchema,
   adminUserEditSchema,
+  authId,
 } from "@/lib/validations";
-import type { z } from "zod";
+import { z } from "zod";
 
 type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: string };
 
@@ -91,6 +92,45 @@ export async function verifyLandlord(values: {
   });
   revalidatePath("/admin/landlords");
   revalidatePath("/properties");
+  return { ok: true };
+}
+
+/* ------------------------------------------------------------------ */
+/* Owner assigns a building to a landlord                              */
+/* ------------------------------------------------------------------ */
+const landlordAssignSchema = z.object({
+  propertyId: z.string().uuid(),
+  landlordId: authId,
+});
+
+export async function assignPropertyLandlord(
+  values: z.infer<typeof landlordAssignSchema>
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = landlordAssignSchema.safeParse(values);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const property = await db<{ id: string; title: string }[]>`
+    select id, title from properties where id = ${parsed.data.propertyId}
+  `;
+  if (!property[0]) return { ok: false, error: "Property not found." };
+
+  const landlord = await db<{ id: string }[]>`select id from landlords where id = ${parsed.data.landlordId}`;
+  if (!landlord[0]) return { ok: false, error: "The selected user is not a landlord." };
+
+  await db`update properties set owner_id = ${parsed.data.landlordId} where id = ${parsed.data.propertyId}`;
+
+  await createNotification({
+    userId: parsed.data.landlordId,
+    type: "system_announcement",
+    title: "Building assigned to you",
+    body: `"${property[0].title}" has been assigned to you. Add floors and house numbers from your dashboard.`,
+    link: "/dashboard/landlord/properties",
+  });
+
+  await audit("landlord_assigned", "properties", property[0].id, { landlord: parsed.data.landlordId });
+  revalidatePath("/admin/properties");
+  revalidatePath("/dashboard/landlord/properties");
   return { ok: true };
 }
 

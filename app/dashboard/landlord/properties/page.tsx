@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Plus } from "lucide-react";
+import { Home } from "lucide-react";
 import { requireProfile } from "@/lib/auth/helpers";
 import { db } from "@/db";
 import { PageHeader } from "@/components/dashboard";
@@ -37,24 +37,14 @@ export default async function LandlordPropertiesPage() {
     <div>
       <PageHeader
         title="My properties"
-        description="Manage your properties and assigned agents."
-        actions={
-          <Link href="/dashboard/agent/properties/new" className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <Plus className="size-4" /> Add property
-          </Link>
-        }
+        description="Manage your buildings, floors and units. The owner adds new buildings."
       />
 
       {list.length === 0 ? (
         <EmptyState
           icon={<Home className="size-8" />}
-          title="No properties yet"
-          description="Add your first property and assign a trusted agent to manage it."
-          action={
-            <Link href="/dashboard/agent/properties/new" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Add property
-            </Link>
-          }
+          title="No buildings yet"
+          description="The owner adds your buildings. Once added and verified, they will appear here for you to manage floors and house numbers."
         />
       ) : (
         <Card>

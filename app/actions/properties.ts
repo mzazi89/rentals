@@ -46,6 +46,12 @@ export async function savePropertyStep(input: SaveStepInput): Promise<ActionResu
   assertRole(profile, ["agent", "landlord", "owner", "admin"]);
   const id = profile.id;
 
+  // Agents cannot create listings — the owner adds properties and assigns
+  // them to agents to manage (editing assigned listings is still allowed).
+  if (!input.propertyId && profile.role === "agent") {
+    return { ok: false, error: "Agents cannot add properties. The owner assigns properties for you to manage." };
+  }
+
   // Validate the current step
   try {
     if (input.step === "basic") {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Plus } from "lucide-react";
+import { Home } from "lucide-react";
 import { requireProfile } from "@/lib/auth/helpers";
 import { db } from "@/db";
 import { PageHeader } from "@/components/dashboard";
@@ -27,25 +27,15 @@ export default async function AgentPropertiesPage() {
   return (
     <div>
       <PageHeader
-        title="My properties"
-        description="Create, edit and manage your listings."
-        actions={
-          <Link href="/dashboard/agent/properties/new" className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <Plus className="size-4" /> Add property
-          </Link>
-        }
+        title="Assigned properties"
+        description="Properties the owner has assigned to you to manage."
       />
 
       {list.length === 0 ? (
         <EmptyState
           icon={<Home className="size-8" />}
-          title="No properties yet"
-          description="List your first property — it takes about 5 minutes with our step-by-step wizard."
-          action={
-            <Link href="/dashboard/agent/properties/new" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Create your first listing
-            </Link>
-          }
+          title="No assignments yet"
+          description="The owner adds properties and assigns them to you. Assigned buildings and their units will appear here."
         />
       ) : (
         <Card>

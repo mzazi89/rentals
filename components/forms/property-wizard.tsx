@@ -91,10 +91,13 @@ export function PropertyWizard({
   propertyTypes,
   amenities,
   initial,
+  successHref = "/dashboard/agent/properties",
 }: {
   propertyTypes: PropertyType[];
   amenities: Amenity[];
   initial?: (Property & { images?: PropertyImage[]; amenity_ids?: string[] }) | null;
+  /** Where to navigate after the listing is submitted (context-aware). */
+  successHref?: string;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -280,7 +283,7 @@ export function PropertyWizard({
       const result = await submitPropertyForReview(propertyId);
       if (result.ok) {
         toast("Property submitted for review.", "success");
-        router.push("/dashboard/agent/properties");
+        router.push(successHref);
         router.refresh();
       } else {
         toast(result.error ?? "Could not submit.", "error");
@@ -519,7 +522,7 @@ export function PropertyWizard({
         <div className="flex gap-2">
           {step === "review" ? (
             <>
-              <Button variant="outline" onClick={() => router.push("/dashboard/agent/properties")}>
+              <Button variant="outline" onClick={() => router.push(successHref)}>
                 Cancel
               </Button>
               <Button onClick={submitForReview} loading={submitting}>

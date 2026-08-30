@@ -6,13 +6,14 @@ import { requireProfile, isOwnerRole } from "@/lib/auth/helpers";
 import { assertRole } from "@/lib/permissions";
 import { createNotification } from "@/lib/notifications";
 import { audit } from "@/lib/audit";
+import { authId } from "@/lib/validations";
 import { z } from "zod";
 
 type ActionResult = { ok: true; [k: string]: unknown } | { ok: false; error: string };
 
 const assignAgentSchema = z.object({
   propertyId: z.string().uuid(),
-  agentId: z.string().uuid(),
+  agentId: authId,
 });
 
 /** Landlord assigns a verified agent to one of their properties. */
@@ -54,5 +55,6 @@ export async function assignAgentToProperty(
 
   await audit("agent_assigned", "properties", prop.id, { agent: parsed.data.agentId });
   revalidatePath("/dashboard/landlord/properties");
+  revalidatePath("/admin/properties");
   return { ok: true };
 }
