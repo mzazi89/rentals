@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Menu, X } from "lucide-react";
+import { Building2, LayoutDashboard, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -28,6 +29,9 @@ export function PublicHeader() {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const authed = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+  // Session-aware: a signed-in visitor sees "Dashboard", not "Sign in".
+  const { data: session } = authClient.useSession();
+  const signedIn = Boolean(session?.user);
 
   if (authed) return null;
 
@@ -50,18 +54,29 @@ export function PublicHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="/login"
-            className="rounded-md px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-          >
-            Get started
-          </Link>
+          {signedIn ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+            >
+              <LayoutDashboard className="size-4" /> Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-md px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
         <button
           aria-label={open ? "Close menu" : "Open menu"}
@@ -86,20 +101,32 @@ export function PublicHeader() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2 border-t pt-3">
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="flex-1 rounded-md border px-4 py-2.5 text-center text-sm font-medium"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/signup"
-                onClick={() => setOpen(false)}
-                className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
-              >
-                Get started
-              </Link>
+              {signedIn ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="flex-1 rounded-md border px-4 py-2.5 text-center text-sm font-medium"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setOpen(false)}
+                    className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
+                  >
+                    Get started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </nav>
