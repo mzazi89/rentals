@@ -39,7 +39,20 @@ export async function requireUser(): Promise<AuthUser> {
 /** Require an authenticated user with an active profile. */
 export async function requireProfile(): Promise<Profile> {
   const user = await requireUser();
-  const profile = await getCurrentProfile();
+  let profile = await getCurrentProfile();
+
+  // Heal orphan accounts: an auth user with no profile row (e.g. signup was
+  // interrupted before createProfileAfterSignup ran) would otherwise bounce
+  // /login <-> /dashboard forever. Create the row on first contact so the
+  // normal role-selection flow takes over.
+  if (!profile) {
+    await db`
+      insert into profiles (id, email, full_name, role, status, is_onboarded)
+      select id, email, name, null, 'active', false from "user" where id = ${user.id}
+      on conflict (id) do nothing
+    `;
+    profile = await getCurrentProfile();
+  }
   if (!profile) redirect("/login");
   if (profile.status === "suspended") redirect("/account-suspended");
   return profile;

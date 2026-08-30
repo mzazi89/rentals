@@ -49,6 +49,14 @@ export async function chooseRoleAction(values: z.infer<typeof roleSelectSchema>)
   const session = await auth.api.getSession({ headers: headers() });
   if (!session?.user) return { ok: false, error: "You must be signed in." };
 
+  // Ensure the profile row exists (heals orphans from interrupted signups)
+  // before selecting a role.
+  await db`
+    insert into profiles (id, email, full_name, role, status, is_onboarded)
+    select id, email, name, null, 'active', false from "user" where id = ${session.user.id}
+    on conflict (id) do nothing
+  `;
+
   const rows = await db<{ role: string | null }[]>`select role from profiles where id = ${session.user.id}`;
   if (rows[0]?.role) return { ok: false, error: "Role has already been selected." };
 
