@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SignupForm } from "@/components/auth-forms";
+import { getCurrentUser } from "@/lib/auth/helpers";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -9,7 +11,12 @@ export const metadata = buildMetadata({
   noIndex: true,
 });
 
-export default function SignupPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SignupPage() {
+  // A signed-in user has no reason to see the signup form (server-side check).
+  if (await getCurrentUser()) redirect("/dashboard");
+
   return (
     <>
       <h1 className="text-2xl font-bold">Create your account</h1>

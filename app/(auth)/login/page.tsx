@@ -15,9 +15,8 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
-  // Middleware bounces cookie-holders to /dashboard, but a genuinely valid
-  // session reaching here (e.g. ?expired=1 link with a fresh session) should
-  // go straight to the dashboard instead of showing the form.
+  // A genuinely valid session reaching here goes straight to the dashboard
+  // instead of showing the form (session checked server-side).
   if (await getCurrentUser()) redirect("/dashboard");
 
   return (

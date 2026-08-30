@@ -32,7 +32,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 /** Require an authenticated user; redirect to /login otherwise. */
 export async function requireUser(): Promise<AuthUser> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login?expired=1");
+  if (!user) redirect("/login");
   return user;
 }
 
