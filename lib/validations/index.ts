@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+/**
+ * Platform account IDs come from the auth provider (Better Auth) and are
+ * opaque strings (e.g. 32-char alphanumeric) — NOT UUIDs. Use for any field
+ * that references user / profile / agent / landlord / tenant records.
+ * (Columns generated with crypto.randomUUID — properties, leases, viewings,
+ * applications, payments, messages, conversations — keep z.string().uuid().)
+ */
+export const authId = z.string().trim().min(1, "Invalid ID").max(64);
+
 // ------------------------------------------------------------------
 // Auth
 // ------------------------------------------------------------------
@@ -194,14 +203,14 @@ export const messageSendSchema = z.object({
 
 export const conversationCreateSchema = z.object({
   propertyId: z.string().uuid(),
-  agentId: z.string().uuid(),
+  agentId: authId,
 });
 
 // ------------------------------------------------------------------
 // Reviews / reports
 // ------------------------------------------------------------------
 export const reviewCreateSchema = z.object({
-  agentId: z.string().uuid(),
+  agentId: authId,
   leaseId: z.string().uuid().optional(),
   propertyId: z.string().uuid().optional(),
   rating: z.coerce.number().int().min(1, "Select a rating").max(5),
@@ -211,7 +220,7 @@ export const reviewCreateSchema = z.object({
 export const reportCreateSchema = z.object({
   reason: z.enum(["fake_property", "scam", "incorrect_information", "inappropriate_content", "agent_misconduct", "other"]),
   description: z.string().trim().min(10, "Please describe the issue (at least 10 characters)").max(2000),
-  reportedUserId: z.string().uuid().optional(),
+  reportedUserId: authId.optional(),
   propertyId: z.string().uuid().optional(),
 });
 
@@ -248,13 +257,13 @@ export const agencySettingsSchema = z.object({
 // Admin
 // ------------------------------------------------------------------
 export const adminUserEditSchema = z.object({
-  userId: z.string().uuid(),
+  userId: authId,
   fullName: z.string().trim().min(2).max(120),
   phone: z.string().trim().max(20).optional(),
 });
 
 export const adminVerifyAgentSchema = z.object({
-  agentId: z.string().uuid(),
+  agentId: authId,
   action: z.enum(["approve", "reject", "request_info"]),
   note: z.string().trim().max(1000).optional(),
 });
