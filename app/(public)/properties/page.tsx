@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { getPublicProperties, type PropertyWithRelations } from "@/lib/queries";
 import { PropertyCard, PropertyGrid, PropertyCardSkeleton } from "@/components/properties";
 import { PropertySearchClient } from "@/components/properties-search-client";
+import { PublicPageHero, PAGE_IMAGES } from "@/components/public-page-hero";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -71,14 +72,17 @@ export default async function PropertiesPage({
   if (filters.amenities && filters.amenities.length > 0) currentFilters.amenities = filters.amenities.join(",");
 
   return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-bold">Rental properties</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {filters.location
-          ? `Properties in or near ${filters.location}`
-          : "Verified rentals across Kenya"}
-      </p>
-
+    <div>
+      <PublicPageHero
+        title="Rental properties"
+        subtitle={
+          filters.location
+            ? `Properties in or near ${filters.location}`
+            : "Verified rentals across Kenya — filter by location, budget, bedrooms and amenities to find your next home."
+        }
+        image={PAGE_IMAGES.dusk}
+      />
+      <div className="container py-8">
       <Suspense fallback={null}>
         <PropertySearchClient
           filters={currentFilters}
@@ -122,6 +126,7 @@ export default async function PropertiesPage({
           </Suspense>
         </PropertySearchClient>
       </Suspense>
+      </div>
     </div>
   );
 }

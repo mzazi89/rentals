@@ -107,7 +107,10 @@ export default async function HomePage() {
         <div className="mb-6 flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-bold">Featured properties</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Hand-picked rentals our agents recommend first.</p>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Hand-picked rentals our agents recommend first — verified buildings, real house
+              numbers and honest prices across Kenya's best neighbourhoods.
+            </p>
           </div>
           <Link href="/properties?featuredOnly=true" className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:inline-flex">
             View all <ArrowRight className="size-4" />
@@ -130,7 +133,11 @@ export default async function HomePage() {
       <section className="border-y bg-muted/30">
         <div className="container py-12 sm:py-16">
           <h2 className="text-2xl font-bold">Popular locations</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Start your search in Kenya's favourite neighborhoods.</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Start your search in Kenya's favourite neighbourhoods — from the buzzing streets of
+            Kilimani to the leafy estates of Westlands. Pick a location to see what's available
+            near you.
+          </p>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {locations.map((loc) => (
               <Link
@@ -149,7 +156,10 @@ export default async function HomePage() {
       {/* ── Categories ───────────────────────────────────────── */}
       <section className="container py-12 sm:py-16">
         <h2 className="text-2xl font-bold">Browse by type</h2>
-        <p className="mt-1 text-sm text-muted-foreground">From bedsitters to villas — find the right fit.</p>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          From bedsitters to villas — find the right fit for your budget and lifestyle, whether
+          you're a young professional, a growing family or an investor.
+        </p>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {types.map((t) => (
             <Link

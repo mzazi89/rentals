@@ -136,9 +136,11 @@ export function PublicFooter() {
       <div className="container grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            Kenya's trusted platform connecting landlords, rent agents and tenants.
-            Search, view, apply and pay rent — all in one place.
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            Kenya's trusted platform connecting landlords, rent agents and tenants. Search
+            verified buildings, view in person, apply online and pay rent with receipts — all
+            in one place. Every landlord is verified by the owner before their building goes
+            live, and every agent is screened by our team.
           </p>
         </div>
         <div>
@@ -148,22 +150,26 @@ export function PublicFooter() {
             <li><Link className="hover:text-foreground" href="/agents">Find agents</Link></li>
             <li><Link className="hover:text-foreground" href="/about">About RentHub</Link></li>
             <li><Link className="hover:text-foreground" href="/contact">Contact us</Link></li>
+            <li><Link className="hover:text-foreground" href="/safety">Rental safety guide</Link></li>
           </ul>
         </div>
         <div>
-          <h3 className="text-sm font-semibold">Legal</h3>
+          <h3 className="text-sm font-semibold">For tenants</h3>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <li><Link className="hover:text-foreground" href="/signup">Create an account</Link></li>
+            <li><Link className="hover:text-foreground" href="/login">Sign in</Link></li>
+            <li><Link className="hover:text-foreground" href="/properties">Find a home</Link></li>
+            <li><Link className="hover:text-foreground" href="/agents">Talk to an agent</Link></li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold">Legal & help</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li><Link className="hover:text-foreground" href="/terms">Terms of service</Link></li>
             <li><Link className="hover:text-foreground" href="/privacy">Privacy policy</Link></li>
-            <li><Link className="hover:text-foreground" href="/safety">Rental safety</Link></li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold">Get in touch</h3>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li>hello@renthub.co.ke</li>
             <li>+254 700 000 000</li>
-            <li>Nairobi, Kenya</li>
+            <li>Kilimani, Nairobi, Kenya</li>
           </ul>
         </div>
       </div>

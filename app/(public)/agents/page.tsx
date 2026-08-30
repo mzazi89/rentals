@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { getVerifiedAgents, type AgentWithProfile } from "@/lib/queries";
 import { AgentCard, type AgentWithProfileCard } from "@/components/agents";
 import { EmptyState } from "@/components/ui/feedback";
+import { PublicPageHero, PAGE_IMAGES } from "@/components/public-page-hero";
 import { Users } from "lucide-react";
 import { buildMetadata } from "@/lib/seo";
 
@@ -28,30 +29,32 @@ export default async function AgentsPage() {
   }
 
   return (
-    <div className="container py-10">
-      <h1 className="text-2xl font-bold sm:text-3xl">Our agents</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Every agent on RentHub is verified by our team. Browse their profiles, listings and reviews.
-      </p>
-
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {agents.map((a) => (
-          <AgentCard key={a.id} agent={a as AgentWithProfileCard} />
-        ))}
-        {agents.length === 0 ? (
-          <div className="col-span-full">
-            <EmptyState
-              icon={<Users className="size-8" />}
-              title="No verified agents yet"
-              description="Agents who complete verification will appear here."
-              action={
-                <a href="/signup" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                  Join as an agent
-                </a>
-              }
-            />
-          </div>
-        ) : null}
+    <div>
+      <PublicPageHero
+        title="Our agents"
+        subtitle="Every agent on RentHub is verified by our team. Browse their profiles, listings and reviews — and connect with the professional who knows your area best."
+        image={PAGE_IMAGES.facade}
+      />
+      <div className="container py-10">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {agents.map((a) => (
+            <AgentCard key={a.id} agent={a as AgentWithProfileCard} />
+          ))}
+          {agents.length === 0 ? (
+            <div className="col-span-full">
+              <EmptyState
+                icon={<Users className="size-8" />}
+                title="No verified agents yet"
+                description="Agents who complete verification will appear here."
+                action={
+                  <a href="/signup" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    Join as an agent
+                  </a>
+                }
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
